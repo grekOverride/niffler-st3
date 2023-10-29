@@ -7,13 +7,12 @@ import io.qameta.allure.AllureId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.*;
 
+import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import static java.util.Arrays.asList;
 
 public class UserQueueExtension implements BeforeEachCallback, AfterTestExecutionCallback, ParameterResolver {
 
@@ -38,12 +37,19 @@ public class UserQueueExtension implements BeforeEachCallback, AfterTestExecutio
 
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
-        List<Parameter> fullParametersList = new ArrayList<>(asList(context.getRequiredTestMethod().getParameters()));
-
-        Optional<Method> beforeEachMethod = Arrays.stream(context.getRequiredTestClass().getDeclaredMethods())
+        List<Method> handleMethods = new ArrayList<>();
+        handleMethods.add(context.getRequiredTestMethod());
+        Arrays.stream(context.getRequiredTestClass().getDeclaredMethods())
                 .filter(
-                        method -> method.isAnnotationPresent(BeforeEach.class)).findFirst();
-        beforeEachMethod.ifPresent(method -> fullParametersList.addAll(asList(method.getParameters())));
+                        method -> method.isAnnotationPresent(BeforeEach.class))
+                .forEach(handleMethods::add);
+
+        List<Parameter> fullParametersList = handleMethods.stream()
+                .map(Executable::getParameters)
+                .flatMap(Arrays::stream)
+                .filter(p -> p.getType().isAssignableFrom(UserJson.class))
+                .filter(p -> p.isAnnotationPresent(User.class))
+                .toList();
 
         Map<CandidateInfoForFriendsTestDto, UserJson> candidatesForTest = new ConcurrentHashMap<>();
 
@@ -110,44 +116,6 @@ public class UserQueueExtension implements BeforeEachCallback, AfterTestExecutio
         user.setPassword(password);
         return user;
     }
-
-    //////////////
-
-  /*  @Override
-    public void beforeEach(ExtensionContext context) throws Exception {
-        List<Parameter> fullParametersList = asList(context.getRequiredTestMethod().getParameters());
-        if (fullParametersList.isEmpty()) {
-            Optional<Method> beforeEachMethod = Arrays.stream(context.getRequiredTestClass().getDeclaredMethods())
-                    .filter(
-                            method -> method.isAnnotationPresent(BeforeEach.class)).findFirst();
-            beforeEachMethod.ifPresent(method -> fullParametersList.addAll(asList(method.getParameters())));
-        }
-        ///  Map<User.UserType, UserJson> candidatesForTest = new ConcurrentHashMap<>();
-        Map<Pair<User.UserType, String>, UserJson> candidatesForTest = new ConcurrentHashMap<>();
-
-        for (Parameter parameter : fullParametersList) {
-            if (parameter.getType().isAssignableFrom(UserJson.class) && parameter.isAnnotationPresent(User.class)) {
-                UserJson candidateForTest = setCandidateForTest(parameter);
-                ///    context.getStore(NAMESPACE).put(getAllureId(context), candidateForTest);
-                //// break;
-                candidatesForTest.put(Pair.of(parameter.getAnnotation(User.class).userType(), parameter.getName()), candidateForTest);
-
-                context.getStore(NAMESPACE).put(getAllureId(context), candidatesForTest);
-            }
-        }
-    }
-
-    private static UserJson setCandidateForTest(Parameter parameter) {
-        User parameterAnnotation = parameter.getAnnotation(User.class);
-        User.UserType userType = parameterAnnotation.userType();
-        Queue<UserJson> usersQueueByType = usersQueue.get(userType);
-        UserJson candidateForTest = null;
-        while (candidateForTest == null) {
-            candidateForTest = usersQueueByType.poll();
-        }
-        candidateForTest.setUserType(userType);
-        return candidateForTest;
-    }*/
 
 
 }
