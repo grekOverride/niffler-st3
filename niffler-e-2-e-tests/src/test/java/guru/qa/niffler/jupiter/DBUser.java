@@ -16,10 +16,10 @@ public @interface DBUser {
 
      String username();
      String password();
-     boolean enabled();
-     boolean accountNonExpired();
-     boolean accountNonLocked();
-     boolean credentialsNonExpired();
+     boolean enabled() default true;
+     boolean accountNonExpired() default true;
+     boolean accountNonLocked() default true;
+     boolean credentialsNonExpired() default true;
      Authority[] authorities();
 
 }

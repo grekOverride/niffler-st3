@@ -16,9 +16,6 @@ public class DBUserExtension implements BeforeEachCallback, ParameterResolver {
     public static ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(DBUserExtension.class);
 
 
-    private final UserEntity user = new UserEntity();
-
-
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
         List<Method> handleMethods = new ArrayList<>();
@@ -33,6 +30,7 @@ public class DBUserExtension implements BeforeEachCallback, ParameterResolver {
                             && method.isAnnotationPresent(DBUser.class)
             ) {
                 DBUser annotation = extensionContext.getRequiredTestMethod().getAnnotation(DBUser.class);
+                UserEntity user = new UserEntity();
 
                 user.setUsername(annotation.username());
                 user.setPassword(annotation.password());
@@ -74,7 +72,5 @@ public class DBUserExtension implements BeforeEachCallback, ParameterResolver {
         }
         return allureId.value();
     }
-
-
 
 }

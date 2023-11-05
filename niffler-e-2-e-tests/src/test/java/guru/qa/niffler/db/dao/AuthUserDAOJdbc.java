@@ -65,6 +65,7 @@ public class AuthUserDAOJdbc implements AuthUserDAO, UserDataUserDAO {
             } catch (SQLException e) {
                 conn.rollback();
                 conn.setAutoCommit(true);
+                throw new RuntimeException(e);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -96,6 +97,7 @@ public class AuthUserDAOJdbc implements AuthUserDAO, UserDataUserDAO {
             } catch (SQLException e) {
                 conn.rollback();
                 conn.setAutoCommit(true);
+                throw new RuntimeException(e);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -105,30 +107,27 @@ public class AuthUserDAOJdbc implements AuthUserDAO, UserDataUserDAO {
     @Override
     public UserEntity getUserByUserName(String userName) {
         UserEntity user;
-        try (Connection conn = authDs.getConnection()) {
-            try (
-                    PreparedStatement usersPs = conn.prepareStatement(
-                            "SELECT * from users WHERE username = ?", PreparedStatement.RETURN_GENERATED_KEYS);
-            ) {
-                usersPs.setString(1, userName);
+        try (
+                Connection conn = authDs.getConnection();
+                PreparedStatement usersPs = conn.prepareStatement(
+                        "SELECT * from users WHERE username = ?", PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
+            usersPs.setString(1, userName);
 
-                try (ResultSet rs = usersPs.executeQuery()) {
-                    if (rs.next()) {
-                        user = UserEntity.builder()
-                                .id(UUID.fromString(rs.getString("id")))
-                                .username(rs.getString("username"))
-                                .password(pe.encode(rs.getString("password")))
-                                .enabled(rs.getBoolean("enabled"))
-                                .accountNonExpired(rs.getBoolean("account_non_expired"))
-                                .accountNonLocked(rs.getBoolean("account_non_locked"))
-                                .credentialsNonExpired(rs.getBoolean("credentials_non_expired"))
-                                .build();
-                    } else {
-                        throw new IllegalStateException("Can`t get ResultSet");
-                    }
+            try (ResultSet rs = usersPs.executeQuery()) {
+                if (rs.next()) {
+                    user = UserEntity.builder()
+                            .id(UUID.fromString(rs.getString("id")))
+                            .username(rs.getString("username"))
+                            .password(pe.encode(rs.getString("password")))
+                            .enabled(rs.getBoolean("enabled"))
+                            .accountNonExpired(rs.getBoolean("account_non_expired"))
+                            .accountNonLocked(rs.getBoolean("account_non_locked"))
+                            .credentialsNonExpired(rs.getBoolean("credentials_non_expired"))
+                            .build();
+                } else {
+                    throw new IllegalStateException("Can`t get ResultSet");
                 }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
             }
 
             List<AuthorityEntity> authorities = new ArrayList<>();
@@ -165,16 +164,18 @@ public class AuthUserDAOJdbc implements AuthUserDAO, UserDataUserDAO {
     @Override
     public int createUserInUserData(UserEntity user) {
         int createdRows = 0;
-        try (Connection conn = userdataDs.getConnection()) {
-            try (PreparedStatement usersPs = conn.prepareStatement(
-                    "INSERT INTO users (username, currency) " +
-                            "VALUES (?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
+        try (
+                Connection conn = userdataDs.getConnection();
+                PreparedStatement usersPs = conn.prepareStatement(
+                        "INSERT INTO users (username, currency) " +
+                                "VALUES (?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
 
-                usersPs.setString(1, user.getUsername());
-                usersPs.setString(2, CurrencyValues.RUB.name());
+            usersPs.setString(1, user.getUsername());
+            usersPs.setString(2, CurrencyValues.RUB.name());
 
-                createdRows = usersPs.executeUpdate();
-            }
+            createdRows = usersPs.executeUpdate();
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -187,45 +188,46 @@ public class AuthUserDAOJdbc implements AuthUserDAO, UserDataUserDAO {
     public UserEntityFromUserData getUserByUserNameInUserData(String userName) {
         UserEntityFromUserData userEntityFromUserData;
 
-        try (Connection conn = userdataDs.getConnection()) {
-            try (PreparedStatement usersPs = conn.prepareStatement(
-                    "SELECT * from users WHERE username = ?", PreparedStatement.RETURN_GENERATED_KEYS)) {
+        try (
+                Connection conn = userdataDs.getConnection();
+                PreparedStatement usersPs = conn.prepareStatement(
+                        "SELECT * from users WHERE username = ?", PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
 
-                usersPs.setString(1, userName);
+            usersPs.setString(1, userName);
 
-                try (ResultSet rs = usersPs.executeQuery()) {
-                    if (rs.next()) {
-                        userEntityFromUserData = UserEntityFromUserData.builder()
-                                .id(UUID.fromString(rs.getString("id")))
-                                .username(rs.getString("username"))
-                                .currency(CurrencyValues.valueOf(rs.getString("currency")))
-                                .firstname(rs.getString("firstname"))
-                                .surname(rs.getString("surname"))
-                                .photo(rs.getBytes("photo"))
-                                .build();
-                    } else {
-                        throw new IllegalStateException("Can`t get ResultSet");
-                    }
+            try (ResultSet rs = usersPs.executeQuery()) {
+                if (rs.next()) {
+                    userEntityFromUserData = UserEntityFromUserData.builder()
+                            .id(UUID.fromString(rs.getString("id")))
+                            .username(rs.getString("username"))
+                            .currency(CurrencyValues.valueOf(rs.getString("currency")))
+                            .firstname(rs.getString("firstname"))
+                            .surname(rs.getString("surname"))
+                            .photo(rs.getBytes("photo"))
+                            .build();
+                } else {
+                    throw new IllegalStateException("Can`t get ResultSet");
                 }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
             }
-        } catch (SQLException e) {
+
+        } catch (
+                SQLException e) {
             throw new RuntimeException(e);
         }
-
         return userEntityFromUserData;
     }
 
     @Override
     public void deleteUserByIdInUserData(UUID userId) {
-        try (Connection conn = userdataDs.getConnection()) {
-            try (PreparedStatement usersPs = conn.prepareStatement(
-                    "DELETE from users WHERE id = ?")) {
+        try (
+                Connection conn = userdataDs.getConnection();
+                PreparedStatement usersPs = conn.prepareStatement(
+                        "DELETE from users WHERE id = ?")
+        ) {
+            usersPs.setObject(1, userId);
+            usersPs.executeUpdate();
 
-                usersPs.setObject(1, userId);
-                usersPs.executeUpdate();
-            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
