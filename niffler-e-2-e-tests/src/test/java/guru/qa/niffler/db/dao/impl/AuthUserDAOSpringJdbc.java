@@ -1,3 +1,5 @@
+/*  file deleted in master, but need for hw3
+
 package guru.qa.niffler.db.dao.impl;
 
 import guru.qa.niffler.db.ServiceDB;
@@ -112,3 +114,4 @@ public class AuthUserDAOSpringJdbc implements AuthUserDAO, UserDataUserDAO {
         userdataJdbcTemplate.update("DELETE FROM users WHERE username = ?", username);
     }
 }
+*/

@@ -1,3 +1,4 @@
+/* file deleted in master, but need for hw3
 package guru.qa.niffler.db.model.auth;
 
 import jakarta.persistence.Column;
@@ -67,3 +68,4 @@ public class AuthorityEntity {
         return Objects.hash(id, authority, user);
     }
 }
+*/
