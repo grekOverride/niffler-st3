@@ -15,7 +15,13 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static jakarta.persistence.FetchType.EAGER;
-
+/*
+//var from hw3
+@Builder(toBuilder = true)
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+public class UserEntity {*/
 @Entity
 @Table(name = "users")
 public class AuthUserEntity {

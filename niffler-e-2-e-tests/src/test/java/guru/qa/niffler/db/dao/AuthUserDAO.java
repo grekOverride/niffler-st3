@@ -17,4 +17,15 @@ public interface AuthUserDAO {
     void deleteUser(AuthUserEntity userId);
 
     AuthUserEntity getUserById(UUID userId);
+/*var from hw3
+    public interface AuthUserDAO {
+
+        PasswordEncoder pe = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+
+        int createUser(UserEntity user);
+
+        void deleteUserById(UUID userId);
+
+        UserEntity getUserByUserName(String userName);
+    }*/
 }

@@ -12,3 +12,14 @@ public interface UserDataUserDAO {
 
     void deleteUserByUsernameInUserData(String username);
 }
+/* var from hw3
+
+public interface UserDataUserDAO {
+
+    int createUserInUserData(UserEntity user);
+
+    void deleteUserByIdInUserData(UUID userId);
+
+    UserEntityFromUserData getUserByUserNameInUserData(String userName);
+
+}*/
